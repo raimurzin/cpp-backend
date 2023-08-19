@@ -137,6 +137,6 @@ int main() {
             std::move(socket));
         t.detach(); // После вызова detach поток продолжит выполняться независимо от объекта t
     }
-    
+
     return 0;
 }
