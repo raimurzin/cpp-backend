@@ -11,6 +11,8 @@
 #include <thread>
 #include <optional>
 #include <syncstream>
+#include <sstream>
+#include <functional>
 
 namespace net = boost::asio;
 using tcp = net::ip::tcp;
@@ -115,7 +117,7 @@ void HandleConnection(tcp::socket& socket, RequestHandler&& request_handler) {
     }
 
     beast::error_code ec;
-    socket.shutdown(socket.shutdown_send, ec); 	// Запрещаем дальнейшую отправку данных через сокет
+    socket.shutdown(tcp::socket::shutdown_send, ec); 	// Запрещаем дальнейшую отправку данных через сокет
 }
 
 int main() {
@@ -126,12 +128,12 @@ int main() {
     tcp::acceptor acceptor(io_context, { address, port });
 
     while (true) {
-        tcp::socket socket{ io_context };
+        tcp::socket socket(ioc);
+        std::cout << "Server has started..."sv << std::endl;
         acceptor.accept(socket);
+        std::cout << "Connection received"sv << std::endl;
 
-        std::cout << "Server has started...\n";
-
-        std::thread t(
+	std::thread t(
             [](tcp::socket socket) {
                 HandleConnection(socket, HandleRequest); },
             std::move(socket));
