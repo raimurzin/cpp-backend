@@ -75,7 +75,7 @@ StringResponse OtherMethodsReponse(http::status status, std::string_view body, u
     response.set(http::field::content_type, content_type);
     response.set(http::field::allow, "GET, HEAD");
     response.body() = body;
-    response.content_length(body.size());
+    response.content_length(response.body().size());
     response.keep_alive(keep_alive);
     return response;
 }
