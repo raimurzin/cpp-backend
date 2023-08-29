@@ -128,7 +128,7 @@ int main() {
     tcp::acceptor acceptor(io_context, { address, port });
 
     while (true) {
-        tcp::socket socket(ioc);
+        tcp::socket socket(io_context);
         std::cout << "Server has started..."sv << std::endl;
         acceptor.accept(socket);
         std::cout << "Connection received"sv << std::endl;
