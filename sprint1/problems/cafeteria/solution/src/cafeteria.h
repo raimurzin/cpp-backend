@@ -133,7 +133,7 @@ private:
             logger_.LogMessage("Order has been delivered already"sv);
             return;
         }
-        if (IsReadyToDelieve) {
+        if (IsReadyToDelieve()) {
             Delive();
         }
     }
@@ -143,7 +143,7 @@ private:
         handler_(Result{ HotDog{ id_, sausage_, bread_ } });
     }
 
-    bool IsReadyToDelieve() {
+    bool IsReadyToDelieve() const {
         return sausage_->IsCooked() && bread_->IsCooked() && bread_baked_ && sausage_fried_;
     }
 
@@ -180,7 +180,7 @@ public:
         // При необходимости реализуйте дополнительные классы
         const int order_id = next_order_id_.fetch_add(1);
         std::make_shared<HotDogOrder>
-            (io_, order_id, std::move(handler), gas_cooker_, store_.GetBread(), store_.GetSausage())->StartCooking();
+            (io_, order_id, std::move(handler), gas_cooker_, store_.GetSausage(), store_.GetBread())->StartCooking();
     }
 
 private:
