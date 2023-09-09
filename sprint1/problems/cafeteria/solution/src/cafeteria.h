@@ -57,6 +57,8 @@ private:
 };
 
 using Timer = net::steady_timer;
+// Функция-обработчик операции приготовления хот-дога
+using HotDogHandler = std::function<void(Result<HotDog> hot_dog)>;
 
 class HotDogOrder : public std::enable_shared_from_this<HotDogOrder> { //Класс "заказ" - приготовление хот - догов
 public:
@@ -165,9 +167,6 @@ private:
     Timer bread_timer_{ io_, Milliseconds(1000) };
     Timer sausage_time{ io_, Milliseconds(1500) }; 
 };
-
-// Функция-обработчик операции приготовления хот-дога
-using HotDogHandler = std::function<void(Result<HotDog> hot_dog)>;
 
 // Класс "Кафетерий". Готовит хот-доги
 class Cafeteria {
