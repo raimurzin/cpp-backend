@@ -5,11 +5,15 @@
 #include "clock.h"
 #include "gascooker.h"
 
+/*
+Класс "Сосиска".
+Позволяет себя обжаривать на газовой плите
+*/
 class Sausage : public std::enable_shared_from_this<Sausage> {
 public:
     using Handler = std::function<void()>;
-    
-    explicit Sausage(int id) : id_(id) {}
+
+    explicit Sausage(int id) : id_{ id } {}
 
     int GetId() const {
         return id_;
@@ -29,7 +33,7 @@ public:
             // Запоминаем время фактического начала обжаривания
             self->frying_start_time_ = Clock::now();
             handler();
-        });
+            });
     }
 
     // Завершает приготовление и освобождает горелку
@@ -45,7 +49,7 @@ public:
     }
 
     bool IsCooked() const noexcept {
-        return frying_start_time_.has_value() && frying_end_time_.has_value();
+        return (frying_start_time_.has_value() && frying_end_time_.has_value() ? true : false);
     }
 
     Clock::duration GetCookDuration() const {
@@ -56,7 +60,7 @@ public:
     }
 
 private:
-    int id_ = 0;
+    int id_;
     GasCookerLock gas_cooker_lock_;
     std::optional<Clock::time_point> frying_start_time_;
     std::optional<Clock::time_point> frying_end_time_;
@@ -79,11 +83,16 @@ public:
         if (baking_start_time_) {
             throw std::logic_error("Baking already started");
         }
-        baking_start_time_ = Clock::now();
-        cooker.UseBurner([self = shared_from_this(), handler = std::move(handler)]() {
-            self->baking_start_time_ = Clock::now();
+
+        baking_start_time_ = Clock::now(); // Запрещаем повторный вызов StartBake
+        gas_cooker_lock_ = GasCookerLock{ cooker.shared_from_this() };// Готовимся занять газовую плиту
+
+        // Занимаем горелку для начала обжаривания.
+        // Чтобы продлить жизнь текущего объекта, захватываем shared_ptr в лямбде
+        cooker.UseBurner([self = shared_from_this(), handler = std::move(handler)] {
+            self->baking_start_time_ = Clock::now(); //Время фактического запекания
             handler();
-        });
+            });
     }
 
     // Останавливает приготовление хлеба и освобождает горелку.
@@ -101,17 +110,15 @@ public:
 
     // Информирует, испечён ли хлеб
     bool IsCooked() const noexcept {
-        // Реализуйте этот метод аналогично Sausage::IsCooked
         return (baking_start_time_.has_value() && baking_end_time_.has_value() ? true : false);
     }
 
     // Возвращает продолжительность выпекания хлеба. Бросает исключение, если хлеб не был испечён
     Clock::duration GetBakingDuration() const {
-        // Реализуйте этот метод аналогично Sausage::GetCookDuration
         if (!baking_start_time_ || !baking_end_time_) {
-            throw std::logic_error("Bread has not been baked");
+            throw std::logic_error("Bread has not been cooked");
         }
-        return *baking_start_time_ - *baking_end_time_;
+        return *baking_end_time_ - *baking_start_time_;
     }
 
 private:
@@ -133,5 +140,5 @@ public:
     }
 
 private:
-    int next_id_ = 0;
+    std::atomic_int next_id_ = 0;
 };

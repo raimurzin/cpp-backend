@@ -18,6 +18,7 @@
 #include "result.h"
 
 namespace net = boost::asio;
+namespace sys = boost::system;
 using namespace std::literals;
 using namespace std::chrono;
 
@@ -57,28 +58,28 @@ private:
 };
 
 using Timer = net::steady_timer;
-// Функция-обработчик операции приготовления хот-дога
-using HotDogHandler = std::function<void(Result<HotDog> hot_dog)>;
+using HotDogHandler = std::function<void(Result<HotDog> hot_dog)>; // Функция-обработчик операции приготовления хот-дога
 
-class HotDogOrder : public std::enable_shared_from_this<HotDogOrder> { //Класс "заказ" - приготовление хот - догов
+class HotDogOrder : public std::enable_shared_from_this<HotDogOrder> {
 public:
     explicit HotDogOrder(net::io_context& io, int id, HotDogHandler handler,
-        std::shared_ptr<GasCooker> gas_cooker, std::shared_ptr<Sausage> sausage, std::shared_ptr<Bread> bread) 
-            : io_{ io }, id_{ id }, handler_{ std::move(handler) }, 
-              gas_cooker_{ gas_cooker }, sausage_{ sausage }, bread_{ bread }, logger_(std::to_string(id)) {}
+        std::shared_ptr<GasCooker> gas_cooker, std::shared_ptr<Sausage> sausage, std::shared_ptr<Bread> bread)
+        : io_{ io }, id_{ id }, handler_{ std::move(handler) },
+        gas_cooker_{ gas_cooker }, sausage_{ sausage }, bread_{ bread }, logger_(std::to_string(id)) {}
 
     void StartCooking() {
         logger_.LogMessage("Srart Cooking order"sv);
-        FrySausage(); // Запускаем процесс прожарки
         BakeBread(); // Запускаем процесс запекания
+        FrySausage(); // Запускаем процесс прожарки
     }
 
 private:
     void FrySausage() {
-        logger_.LogMessage("Starting fry sausage"sv);
-        sausage_->StartFry(*gas_cooker_, [self = shared_from_this()] {
-            self->bread_timer_.expires_from_now(Milliseconds{ 1500 });
-            self->bread_timer_.async_wait(
+        logger_.LogMessage("Start baking bread");
+        sausage_->StartFry(*gas_cooker_, [self = shared_from_this()]() {
+            self->sausage_timer_.expires_from_now(Milliseconds{ 1500 });
+
+        self->sausage_timer_.async_wait(
             net::bind_executor(self->strand_, [self = std::move(self)](sys::error_code ec) {
                 self->OnFried(ec);
                 }));
@@ -102,10 +103,11 @@ private:
     }
 
     void BakeBread() {
-        logger_.LogMessage("Starting bake bread"sv);
-        bread_->StartBake(*gas_cooker_, [self = shared_from_this()] {
+        logger_.LogMessage("Start baking bread"sv);
+        bread_->StartBake(*gas_cooker_, [self = shared_from_this()]() {
             self->bread_timer_.expires_from_now(Milliseconds{ 1000 });
-            self->bread_timer_.async_wait(
+        
+        self->bread_timer_.async_wait(
             net::bind_executor(self->strand_, [self = std::move(self)](sys::error_code ec) {
                 self->OnBaked(ec);
                 }));
@@ -165,7 +167,7 @@ private:
 
 private:
     Timer bread_timer_{ io_, Milliseconds(1000) };
-    Timer sausage_time{ io_, Milliseconds(1500) }; 
+    Timer sausage_timer_{ io_, Milliseconds(1500) };
 };
 
 // Класс "Кафетерий". Готовит хот-доги
