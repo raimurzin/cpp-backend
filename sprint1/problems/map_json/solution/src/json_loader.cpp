@@ -2,7 +2,6 @@
 
 #include <fstream>
 #include <string>
-#include <boost/json.hpp>
 
 namespace json_loader {
     using namespace model;
@@ -28,13 +27,13 @@ namespace json_loader {
             auto id = CastBoostString(map.at("id").as_string());
             auto name = CastBoostString(map.at("name").as_string());
 
-            Map map(Map::Id{ id }, name);
+            Map recieved_map(Map::Id{ id }, name);
 
-            LoadRoads(map, map_object.at("roads").as_array());
-            LoadBuildings(map, map_object.at("buildings").as_array());
-            LoadOffices(map, map_object.at("offices").as_array());
+            LoadRoads(recieved_map, map_object.at("roads").as_array());
+            LoadBuildings(recieved_map, map_object.at("buildings").as_array());
+            LoadOffices(recieved_map, map_object.at("offices").as_array());
 
-            game.AddMap(std::move(map));
+            game.AddMap(std::move(recieved_map));
         }
 
         return game;
@@ -83,8 +82,8 @@ namespace json_loader {
             int x = static_cast<int>(office_object.at("x").as_int64());
             int y = static_cast<int>(office_object.at("y").as_int64());
 
-            int x_offset = office_object.at("offsetX"sv).as_int64();
-            int y_offset = office_object.at("offsetY"sv).as_int64();
+            int x_offset = static_cast<int>(office_object.at("offsetX").as_int64());
+            int y_offset = static_cast<int>(office_object.at("offsetY").as_int64());
 
             map.AddOffice(Office{ Office::Id(id), Point { x, y }, Offset { x_offset, y_offset } });
         }
