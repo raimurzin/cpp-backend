@@ -28,7 +28,7 @@ namespace http_server {
     class SessionBase {
         // Напишите недостающий код, используя информацию из урока
     protected:
-        explicit SessionBase(tcp::socket&& socket) : stream_(std::move(socket)){}
+        explicit SessionBase(tcp::socket&& socket) : stream_(std::move(socket)) {}
 
     public:
         SessionBase(const SessionBase&) = delete;
@@ -140,7 +140,7 @@ namespace http_server {
 
     private:
         void DoAccept() {
-            acceptor_.async_accept(net::make_strand(io_), 
+            acceptor_.async_accept(net::make_strand(io_),
                 beast::bind_front_handler(&Listener::OnAccept, this->shared_from_this()));
         }
 
@@ -165,7 +165,7 @@ namespace http_server {
     template <typename RequestHandler>
     void ServeHttp(net::io_context& ioc, const tcp::endpoint& endpoint, RequestHandler&& handler) {
         // Напишите недостающий код, используя информацию из урока
-        
+
         // При помощи decay_t исключим ссылки из типа RequestHandler,
         // чтобы Listener хранил RequestHandler по значению
         using MyListener = Listener<std::decay_t<RequestHandler>>;

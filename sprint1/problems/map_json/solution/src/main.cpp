@@ -43,7 +43,7 @@ int main(int argc, const char* argv[]) {
 
         // 3. Добавляем асинхронный обработчик сигналов SIGINT и SIGTERM
         net::signal_set signals(ioc, SIGINT, SIGTERM);
-        signals.async_wait([&ioc](const boost::system::error_code ec, [[maybe_unused]] int signal_number ) {
+        signals.async_wait([&ioc](const boost::system::error_code ec, [[maybe_unused]] int signal_number) {
             if (!ec) {
                 std::cout << "Signal "sv << signal_number << " received"sv << std::endl;
                 ioc.stop();
@@ -56,9 +56,9 @@ int main(int argc, const char* argv[]) {
         // 5. Запустить обработчик HTTP-запросов, делегируя их обработчику запросов
         constexpr unsigned port = 8080;
         const auto address = net::ip::make_address("0.0.0.0");
-        http_server::ServeHttp(ioc, {address, port}, [&handler](auto&& req, auto&& send) {
+        http_server::ServeHttp(ioc, { address, port }, [&handler](auto&& req, auto&& send) {
             handler(std::forward<decltype(req)>(req), std::forward<decltype(send)>(send));
-        });
+            });
 
         // Эта надпись сообщает тестам о том, что сервер запущен и готов обрабатывать запросы
         std::cout << "Server has started..."sv << std::endl;
