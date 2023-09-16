@@ -10,6 +10,7 @@
 
 #include <iostream>
 #include <utility>
+#include <memory>
 
 namespace http_server {
 

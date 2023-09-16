@@ -29,4 +29,3 @@ add_executable(game_server
 	src/request_handler.h
 )
 target_link_libraries(game_server PRIVATE Threads::Threads)
-add_compile_definitions(BOOST_BEAST_USE_STD_STRING_VIEW)

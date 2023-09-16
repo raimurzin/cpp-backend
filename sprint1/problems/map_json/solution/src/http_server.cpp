@@ -13,4 +13,4 @@ namespace http_server {
     void SessionBase::Run() {
         net::dispatch(stream_.get_executor(), beast::bind_front_handler(&SessionBase::Read, GetSharedThis()));
     }
-}  // namespace http_server
+}  // namespace http_serverx

@@ -1,9 +1,10 @@
 #include "sdk.h"
-//
+
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/signal_set.hpp>
 #include <iostream>
 #include <thread>
+#include <utility>
 
 #include "json_loader.h"
 #include "request_handler.h"
@@ -12,11 +13,9 @@ using namespace std::literals;
 namespace net = boost::asio;
 
 namespace {
-
     // Запускает функцию fn на n потоках, включая текущий
     template <typename Fn>
     void RunWorkers(unsigned n, const Fn& fn) {
-        n = std::max(1u, n);
         std::vector<std::jthread> workers;
         workers.reserve(n - 1);
         // Запускаем n-1 рабочих потоков, выполняющих функцию fn

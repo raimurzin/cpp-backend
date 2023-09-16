@@ -1,99 +1,92 @@
-#pragma once
-
 #include "json_serializer.h"
 
-namespace json_serialize {
-	namespace json = boost::json;
+namespace json_serializer {
 
-	json::value SerializeError(std::string_view code = "mapNotFound", std::string_view message = "Map not found") {
-		json::object error_object = {
-			{"code", code},
-			{"message", message}
-		};
-		return json::value(std::move(error_object));
-	}
+json::value SerializeRoads(const model::Map::Roads& roads) {
+    json::array array;
+    array.reserve(roads.size());
 
-	json::value SerializeAllMaps(const model::Game::Maps& maps) {
-		json::array array_of_head_map;
+    for (const auto& road : roads) {
+        const auto& start = road.GetStart();
+        const auto& end = road.GetEnd();
 
-		for (const auto& map : maps) {
-			json::object head_current_map = {
-				{"id", *(map.GetId())},
-				{"name", map.GetName()}
-			};
-			array_of_head_map.push_back(head_current_map);
-		}
-		return json::value(std::move(array_of_head_map));
-	}
+        json::object object{
+            {"x0", start.x},
+            {"y0", start.y},
+        };
 
-	json::value SerializeCurrentMap(const model::Map& map) {
-		json::object map_object = {
-			{"id ", *(map.GetId())},
-			{"name", map.GetName()}
-		};
+        if (road.IsHorizontal()) {
+            object["x1"] = end.x;
+        } else {
+            object["y1"] = end.y;
+        }
 
-		//Сериализируем дороги, строения и офисы
+        array.push_back(std::move(object));
+    }
 
-		auto CreateJsonArray = [](auto&& object) -> json::array {
-			json::array array;
-			for (const auto& element : object) {
-				array.push_back(element);
-			}
-			return array;
-		};
+    return array;
+}
 
-		map_object["roads"] = CreateJsonArray(map.GetRoads());
-		map_object["buildings"] = CreateJsonArray(map.GetBuildings());
-		map_object["offices"] = CreateJsonArray(map.GetOffices());
+json::value SerializeBuildings(const model::Map::Buildings& buildings) {
+    json::array array;
+    array.reserve(buildings.size());
 
-		return json::value(std::move(map_object));
-	}
+    for (const auto& building : buildings) {
+        const auto& [position, size] = building.GetBounds();
 
-	//Всмопомогательная функция для создания значения "дороги"
-	json::value SerializeRoads(const model::Road& road) {
-		const auto& [x0, y0] = road.GetStart();
-		const auto& [x1, y1] = road.GetEnd();
+        array.push_back(json::value{
+            {"x", position.x},
+            {"y", position.y},
+            {"w", size.width},
+            {"h", size.height},
+        });
+    }
 
-		json::object road_object = {
-			{"x0", x0},
-			{"y0", y0}
-		};
+    return array;
+}
 
-		if (road.IsVertical()) road_object["y1"] = y1;
-		else road_object["x1"] = x1;
+json::value SerializeOffices(const model::Map::Offices& offices) {
+    json::array array;
+    array.reserve(offices.size());
 
-		return json::value(std::move(road_object));
-	}
+    for (const auto& office : offices) {
+        const auto& pos = office.GetPosition();
+        const auto& offset = office.GetOffset();
 
-	//Вспомогательная функция для создания значения "строения"
-	json::value SerializeBuildings(const model::Building& building) {
-		const auto& [position, size] = building.GetBounds();
+        array.push_back(json::value{
+            {"id", *office.GetId()},
+            {"x", pos.x},
+            {"y", pos.y},
+            {"offsetX", offset.dx},
+            {"offsetY", offset.dy},
+        });
+    }
 
-		json::object building_object = {
-			{"x", position.x},
-			{"y", position.y},
-			{"w", size.width},
-			{"h", size.height}
-		};
+    return array;
+}
 
-		return json::value(std::move(building_object));
-	}
+json::value SerializeMap(const model::Map& map) {
+    return json::value{
+        {"id", *map.GetId()},
+        {"name", map.GetName()},
+        {"roads", SerializeRoads(map.GetRoads())},
+        {"buildings", SerializeBuildings(map.GetBuildings())},
+        {"offices", SerializeOffices(map.GetOffices())},
+    };
+}
 
-	//Вспомогательная функция для создания значения "офисы"
-	json::value SerializeOffices(const model::Office& office) {
-		const auto& id = office.GetId();
-		const auto& position = office.GetPosition();
-		const auto& offset = office.GetOffset();
+json::value SerializeMapsInfo(const model::Game::Maps& maps) {
+    json::array array;
+    array.reserve(maps.size());
 
-		json::object office_object = {
-			{"id", *id},
-			{"x", position.x},
-			{"y", position.y},
-			{"offsetX", offset.dx},
-			{"offsetY", offset.dy}
-		};
+    for (const auto& map : maps) {
+        array.push_back(json::value{
+            {"id", *map.GetId()},
+            {"name", map.GetName()},
+        });
+    }
 
-		return json::value(std::move(office_object));
-	}
+    return array;
+}
 
-} // namespace json_serializer
+}  // namespace json_serializer
