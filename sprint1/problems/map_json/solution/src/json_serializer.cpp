@@ -73,7 +73,7 @@ namespace json_serializer {
 
 	json::value SerializeCurrentMap(const model::Map& map) {
 		json::object map_object = {
-			{"id ", *(map.GetId())},
+			{"id", *(map.GetId())},
 			{"name", map.GetName()}
 		};
 
@@ -91,7 +91,7 @@ namespace json_serializer {
 		map_object["roads"] = CreateJsonArray(map.GetRoads(), &SerializeRoads);
 		map_object["buildings"] = CreateJsonArray(map.GetBuildings(), &SerializeBuildings);
 		map_object["offices"] = CreateJsonArray(map.GetOffices(), &SerializeOffices);
-		
+
 		/*
 		json::array roads_array;
 		for (const auto& road : map.GetRoads()) {
