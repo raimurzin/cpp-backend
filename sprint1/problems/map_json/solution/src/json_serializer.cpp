@@ -12,6 +12,7 @@ namespace json_serializer {
 
 	json::value SerializeAllMaps(const model::Game::Maps& maps) {
 		json::array array_of_head_map;
+		array_of_head_map.reserve(maps.size());
 
 		for (const auto& map : maps) {
 			json::object head_current_map = {
@@ -77,20 +78,21 @@ namespace json_serializer {
 		};
 
 		//Сериализируем дороги, строения и офисы
-		/*
-		auto CreateJsonArray = [](auto&& object) -> json::array {
-			json::array array;
+
+		auto CreateJsonArray = [](auto&& object, auto&& serialize_handler) -> json::array {
+			json::array array; 
+			array.reserve(object.size());
 			for (const auto& element : object) {
-				array.push_back(element);
+				array.push_back(serialize_handler(element));
 			}
 			return array;
 		};
 
-		map_object["roads"] = CreateJsonArray(map.GetRoads());
-		map_object["buildings"] = CreateJsonArray(map.GetBuildings());
-		map_object["offices"] = CreateJsonArray(map.GetOffices());
-		*/
-
+		map_object["roads"] = CreateJsonArray(map.GetRoads(), &SerializeRoads);
+		map_object["buildings"] = CreateJsonArray(map.GetBuildings(), &SerializeBuildings);
+		map_object["offices"] = CreateJsonArray(map.GetOffices(), &SerializeOffices);
+		
+		/*
 		json::array roads_array;
 		for (const auto& road : map.GetRoads()) {
 			roads_array.push_back(SerializeRoads(road));
@@ -108,7 +110,7 @@ namespace json_serializer {
 			offices_array.push_back(SerializeOffices(office));
 		}
 		map_object["offices"] = offices_array;
-
+		*/
 
 		return json::value(std::move(map_object));
 	}
