@@ -1,5 +1,4 @@
 #include "json_loader.h"
-
 #include <fstream>
 #include <string>
 
@@ -20,7 +19,7 @@ namespace json_loader {
 
         auto json_object = json::parse(json).as_object();
         const auto array_of_maps = json_object.at("maps").as_array();
-        
+
         for (const auto& map : array_of_maps) {
             auto map_object = map.as_object();
 
@@ -46,7 +45,7 @@ namespace json_loader {
     void LoadGame::LoadRoads(Map& map, boost::json::array& array_of_roads) {
         for (const auto& road : array_of_roads) {
             auto road_object = road.as_object();
-            
+
             int x0 = static_cast<int>(road_object.at("x0").as_int64());
             int y0 = static_cast<int>(road_object.at("y0").as_int64());
 

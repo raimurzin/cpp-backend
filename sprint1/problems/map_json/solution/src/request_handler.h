@@ -1,22 +1,17 @@
 #pragma once
-
 #include "http_server.h"
 #include "json_serializer.h"
 #include "model.h"
 
-#include <string>
-#include <string_view>
 #include <boost/json.hpp>
-#include <boost/algorithm/string/split.hpp> 
-
-#define BOOST_BEAST_USE_STD_STRING_VIEW
 
 namespace http_handler {
     namespace beast = boost::beast;
     namespace http = beast::http;
     namespace json = boost::json;
-    using namespace json_serialize;
+
     using namespace std::literals;
+    using namespace json_serializer;
 
     template <typename Body, typename Allocator>
     using HttpRequest = http::request<Body, http::basic_fields<Allocator>>;
@@ -24,9 +19,12 @@ namespace http_handler {
     template <typename Body, typename Allocator>
     using HttpResponse = http::response<Body, http::basic_fields<Allocator>>;
 
-    template<typename Body, typename Allocator>
-    HttpResponse<Body, Allocator> MakeHttpResponse(http::status status, std::string_view body,
-        unsigned http_version, bool keep_alive, std::string_view content_type);
+    struct ContentType {
+        ContentType() = delete;
+        constexpr static std::string_view TEXT_HTML = "text/html"sv;
+        constexpr static std::string_view TEXT_JSON = "application/json"sv;
+        // При необходимости внутрь ContentType можно добавить и другие типы контента
+    };
 
     class RequestHandler {
     public:
@@ -35,22 +33,26 @@ namespace http_handler {
         RequestHandler(const RequestHandler&) = delete;
         RequestHandler& operator=(const RequestHandler&) = delete;
 
-        struct ContentType {
-            ContentType() = delete;
-            constexpr static std::string_view TEXT_HTML = "text/html"sv;
-            constexpr static std::string_view TEXT_JSON = "application/json"sv;
-            // При необходимости внутрь ContentType можно добавить и другие типы контента
-        };
-
         template <typename Body, typename Allocator, typename Send>
-        void operator()(http::request<Body, http::basic_fields<Allocator>>&& request, Send&& send) {
-            auto target = request.target();
-            if (request.method() == http::verb::get) {
-                send(ProcessGetResponse<Body, Allocator>(std::move(request), target));
+        void operator()(HttpRequest<Body, Allocator>&& req, Send&& send) {
+            auto target = req.target();
+            if (req.method() == http::verb::get) {
+                send(ProcessGetResponse<Body, Allocator>(std::move(req), target));
             }
         }
 
     private:
+        template <typename Body, typename Allocator>
+        static HttpResponse<Body, Allocator> MakeHttpResponse(http::status status, std::string_view body, unsigned version, bool keep_alive, std::string_view ContentType_) {
+            HttpResponse<Body, Allocator> response(status, version);
+            response.set(http::field::content_type, ContentType_);
+            response.body() = body;
+            response.content_length(body.size());
+            response.keep_alive(keep_alive);
+            return response;
+        }
+
+
         template<typename Body, typename Allocator>
         HttpResponse<Body, Allocator> ProcessGetResponse(http::request<Body, http::basic_fields<Allocator>>&& request, std::string_view target) {
             std::string_view head_of_url = "/api/v1/maps"sv;
@@ -61,7 +63,7 @@ namespace http_handler {
                     request.version(),
                     request.keep_alive(),
                     ContentType::TEXT_JSON
-                );
+                    );
             }
             else if (target.starts_with(head_of_url)) { //Хотим отправить конкретную карту
                 std::string map_name(target.begin() + head_of_url.size() + 1, target.end());
@@ -74,7 +76,7 @@ namespace http_handler {
                         request.version(),
                         request.keep_alive(),
                         ContentType::TEXT_JSON
-                    );
+                        );
                 }
 
                 auto map_id = model::Map::Id(std::string{ map_name });
@@ -87,7 +89,7 @@ namespace http_handler {
                         request.version(),
                         request.keep_alive(),
                         ContentType::TEXT_JSON
-                    );
+                        );
                 }
                 else { //Таковой карты нет в БД
                     return MakeHttpResponse<Body, Allocator>(
@@ -96,7 +98,7 @@ namespace http_handler {
                         request.version(),
                         request.keep_alive(),
                         ContentType::TEXT_JSON
-                    );
+                        );
                 }
 
             }
@@ -107,7 +109,7 @@ namespace http_handler {
                     request.version(),
                     request.keep_alive(),
                     ContentType::TEXT_JSON
-                );
+                    );
             }
         }
 

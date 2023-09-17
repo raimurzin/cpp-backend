@@ -1,9 +1,6 @@
-#pragma once
-
 #include "json_serializer.h"
 
-namespace json_serialize {
-	namespace json = boost::json;
+namespace json_serializer {
 
 	json::value SerializeError(std::string_view code = "mapNotFound", std::string_view message = "Map not found") {
 		json::object error_object = {
@@ -24,49 +21,6 @@ namespace json_serialize {
 			array_of_head_map.push_back(head_current_map);
 		}
 		return json::value(std::move(array_of_head_map));
-	}
-
-	json::value SerializeCurrentMap(const model::Map& map) {
-		json::object map_object = {
-			{"id ", *(map.GetId())},
-			{"name", map.GetName()}
-		};
-
-		//Сериализируем дороги, строения и офисы
-		/*
-		auto CreateJsonArray = [](auto&& object) -> json::array {
-			json::array array;
-			for (const auto& element : object) {
-				array.push_back(element);
-			}
-			return array;
-		};
-
-		map_object["roads"] = CreateJsonArray(map.GetRoads());
-		map_object["buildings"] = CreateJsonArray(map.GetBuildings());
-		map_object["offices"] = CreateJsonArray(map.GetOffices());
-		*/
-
-		json::array roads_array;
-		for (const auto& road : map.GetRoads()) {
-			roads_array.push_back(SerializeRoads(road));
-		}
-		map_object["roads"] = roads_array;
-
-		json::array buildings_array;
-		for (const auto& building : map.GetBuildings()) {
-			buildings_array.push_back(SerializeBuildings(building));
-		}
-		map_object["buildings"] = buildings_array;
-
-		json::array offices_array;
-		for (const auto& office : map.GetOffices()) {
-			offices_array.push_back(SerializeOffices(office));
-		}
-		map_object["offices"] = offices_array;
-
-
-		return json::value(std::move(map_object));
 	}
 
 	//Всмопомогательная функция для создания значения "дороги"
@@ -114,6 +68,49 @@ namespace json_serialize {
 		};
 
 		return json::value(std::move(office_object));
+	}
+
+	json::value SerializeCurrentMap(const model::Map& map) {
+		json::object map_object = {
+			{"id ", *(map.GetId())},
+			{"name", map.GetName()}
+		};
+
+		//Сериализируем дороги, строения и офисы
+		/*
+		auto CreateJsonArray = [](auto&& object) -> json::array {
+			json::array array;
+			for (const auto& element : object) {
+				array.push_back(element);
+			}
+			return array;
+		};
+
+		map_object["roads"] = CreateJsonArray(map.GetRoads());
+		map_object["buildings"] = CreateJsonArray(map.GetBuildings());
+		map_object["offices"] = CreateJsonArray(map.GetOffices());
+		*/
+
+		json::array roads_array;
+		for (const auto& road : map.GetRoads()) {
+			roads_array.push_back(SerializeRoads(road));
+		}
+		map_object["roads"] = roads_array;
+
+		json::array buildings_array;
+		for (const auto& building : map.GetBuildings()) {
+			buildings_array.push_back(SerializeBuildings(building));
+		}
+		map_object["buildings"] = buildings_array;
+
+		json::array offices_array;
+		for (const auto& office : map.GetOffices()) {
+			offices_array.push_back(SerializeOffices(office));
+		}
+		map_object["offices"] = offices_array;
+
+
+		return json::value(std::move(map_object));
 	}
 
 } // namespace json_serializer
