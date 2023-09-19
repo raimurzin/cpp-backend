@@ -83,16 +83,7 @@ namespace http_handler {
                     auto map_id = model::Map::Id(std::string{ map_name });
                     const auto* map_ptr = game_.FindMap(map_id);
 
-                    if (map_ptr != nullptr) { //Юху - карта нашлась
-                        return MakeHttpResponse<Body, Allocator>(
-                            http::status::ok,
-                            json::serialize(SerializeCurrentMap(*map_ptr)),
-                            request.version(),
-                            request.keep_alive(),
-                            ContentType::TEXT_JSON
-                            );
-                    }
-                    else { //Таковой карты нет в БД
+                    if (map_ptr == nullptr) { //Запрашиваемой карты в БД нет, вернем ошибку
                         return MakeHttpResponse<Body, Allocator>(
                             http::status::not_found,
                             json::serialize(SerializeError("mapNotFound"sv, "Map not found"sv)),
@@ -101,17 +92,23 @@ namespace http_handler {
                             ContentType::TEXT_JSON
                             );
                     }
+                    return MakeHttpResponse<Body, Allocator>(
+                        http::status::ok,
+                        json::serialize(SerializeCurrentMap(*map_ptr)),
+                        request.version(),
+                        request.keep_alive(),
+                        ContentType::TEXT_JSON
+                        );
                 }
             }
-            else { //Хотим отправить bad_request
-                return MakeHttpResponse<Body, Allocator>(
-                    http::status::bad_request,
-                    json::serialize(SerializeError("badRequest"sv, "Bad request"sv)),
-                    request.version(),
-                    request.keep_alive(),
-                    ContentType::TEXT_JSON
-                    );
-            }
+            //Хотим отправить bad_request
+            return MakeHttpResponse<Body, Allocator>(
+                http::status::bad_request,
+                json::serialize(SerializeError("badRequest"sv, "Bad request"sv)),
+                request.version(),
+                request.keep_alive(),
+                ContentType::TEXT_JSON
+            );
         }
 
     private:

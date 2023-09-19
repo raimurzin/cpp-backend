@@ -51,26 +51,6 @@ namespace http_server {
                 //По окончании работы считывания буфера будет вызван привязанный хендлер
                 beast::bind_front_handler(&SessionBase::OnRead, GetSharedThis()));
         }
-        /*
-        В OnRead в возможны три ситуации:
-            Если клиент закрыл соединение, то сервер должен завершить сеанс.
-            Если произошла ошибка чтения, выведите её в stdout.
-            Если запрос прочитан без ошибок, делегируйте его обработку классу-наследнику.
-    */
-        void OnRead(beast::error_code ec, [[maybe_unused]] std::size_t bytes_read) {
-            if (ec == http::error::end_of_stream) { //Клиент закрыл соединение
-                Close();
-            }
-            if (ec) {
-                return ReportError(ec, "read"sv);
-            }
-            HandleRequest(std::move(request_));
-        }
-
-        void Close() {
-            beast::error_code ec;
-            stream_.socket().shutdown(tcp::socket::shutdown_send, ec);
-        }
 
     protected:
         template <typename Body, typename Fields>
@@ -84,12 +64,11 @@ namespace http_server {
                     self->OnWrite(safe_response->need_eof(), ec, bytes_written);
                 });
         }
+
     private:
-        void OnWrite(bool close, beast::error_code ec, [[maybe_unused]] std::size_t bytes_written) {
-            if (ec) return ReportError(ec, "write"sv);
-            if (close) return Close(); // Семантика ответа требует закрыть соединение
-            Read(); // Считываем следующий запрос
-        }
+        void OnRead(beast::error_code ec, [[maybe_unused]] std::size_t bytes_read);
+        void OnWrite(bool close, beast::error_code ec, [[maybe_unused]] std::size_t bytes_written);
+        void Close();
 
     private:
         beast::tcp_stream stream_; //Сокет поддерживающий таймауты
