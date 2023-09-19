@@ -61,7 +61,7 @@ namespace http_handler {
                 if (target == head_of_url) { //Хотим отправить все карты
                     return MakeHttpResponse<Body, Allocator>(
                         http::status::ok,
-                        json::serialize(SerializeAllMaps(game_.GetMaps())),
+                        json::serialize(SerializeResponse()(game_.GetMaps())),
                         request.version(),
                         request.keep_alive(),
                         ContentType::TEXT_JSON
@@ -73,7 +73,7 @@ namespace http_handler {
                     if (std::count(map_name.begin(), map_name.end(), '/')) { //Пока не известный Get запрос
                         return MakeHttpResponse<Body, Allocator>(
                             http::status::bad_request,
-                            json::serialize(SerializeError("badRequest"sv, "Bad request"sv)),
+                            json::serialize(SerializeResponse()("badRequest"sv, "Bad request"sv)),
                             request.version(),
                             request.keep_alive(),
                             ContentType::TEXT_JSON
@@ -86,7 +86,7 @@ namespace http_handler {
                     if (map_ptr == nullptr) { //Запрашиваемой карты в БД нет, вернем ошибку
                         return MakeHttpResponse<Body, Allocator>(
                             http::status::not_found,
-                            json::serialize(SerializeError("mapNotFound"sv, "Map not found"sv)),
+                            json::serialize(SerializeResponse()("mapNotFound"sv, "Map not found"sv)),
                             request.version(),
                             request.keep_alive(),
                             ContentType::TEXT_JSON
@@ -94,7 +94,7 @@ namespace http_handler {
                     }
                     return MakeHttpResponse<Body, Allocator>(
                         http::status::ok,
-                        json::serialize(SerializeCurrentMap(*map_ptr)),
+                        json::serialize(SerializeResponse()(*map_ptr)),
                         request.version(),
                         request.keep_alive(),
                         ContentType::TEXT_JSON
@@ -104,7 +104,7 @@ namespace http_handler {
             //Хотим отправить bad_request
             return MakeHttpResponse<Body, Allocator>(
                 http::status::bad_request,
-                json::serialize(SerializeError("badRequest"sv, "Bad request"sv)),
+                json::serialize(SerializeResponse()("badRequest"sv, "Bad request"sv)),
                 request.version(),
                 request.keep_alive(),
                 ContentType::TEXT_JSON
